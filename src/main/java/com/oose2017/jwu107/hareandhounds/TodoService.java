@@ -77,7 +77,6 @@ public class TodoService {
             if( p == null || (!p.equals("HOUND") && !p.equals("HARE"))){
                 throw new PieceTypeException("TodoService.createNewGame: no this pieceType");
             }
-
         }catch(Exception ex){
             throw new TodoServiceException("TodoService.createNewGame: Failed to create new game", ex);
         }
@@ -225,12 +224,10 @@ public class TodoService {
     /**
      * Play a game
      */
-
     public String playGame(String body,String gameId) throws InvalidGameIdException, InvalidPlayerIdException,
                                                   IllegalMoveException, IncorrectTurnException, TodoServiceException {
 
         Play play = new Gson().fromJson(body, Play.class);
-        //System.out.println(play.toString());
 
         String sqlBoard = "SELECT * FROM GameBoard WHERE gameId = :gameId";
         String sqlState = "SELECT * FROM GameState WHERE gameId = :gameId";
@@ -262,8 +259,11 @@ public class TodoService {
 
             play.setGameId(gameId);
 
-
             // Incorrect turn
+            if(state.get(0).getState().equals(STATE[0])) {
+                throw new IncorrectTurnException("TodoService.playGame: wait for second player");
+            }
+            
             if(state.get(0).getState().equals(STATE[1])){
                 if(!play.getPlayerId().equals("HARE")){
                     throw new IncorrectTurnException("TodoService.playGame: Incorrect turn");
