@@ -9,7 +9,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
-import java.util.List;
 
 import static spark.Spark.*;
 
@@ -97,31 +96,34 @@ public class TodoController {
         // play game
         post(API_CONTEXT + "/:gameId/turns", "application/json", (request, response) -> {
             try {
-                //logger.info("Make a turn");
                 response.status(201);
                 return todoService.playGame(request.body());
 
             } catch (TodoService.InvalidGameIdException ex) {
                 logger.error("Invalid game id");
                 response.status(404);
+                return new ErrorReason("INVALID_GAME_ID");
 
             } catch (TodoService.InvalidPlayerIdException ex) {
                 logger.error("Invalid player id");
                 response.status(404);
+                return new ErrorReason("INVALID_PLAYER_ID");
 
             } catch (TodoService.IllegalMoveException ex) {
                 logger.error("Illegal move");
                 response.status(422);
+                return new ErrorReason("ILLEGAL_MOVE");
 
             } catch (TodoService.IncorrectTurnException ex) {
                 logger.error("Incorrect Turn");
                 response.status(422);
+                return new ErrorReason("INCORRECT_TURN");
             }
             catch (TodoService.TodoServiceException ex) {
                 logger.error("Failed to play");
                 response.status(500);
+                return new ErrorReason("FAILED_TO_PLAY");
             }
-            return Collections.EMPTY_MAP;
         }, new JsonTransformer());
 
     }
