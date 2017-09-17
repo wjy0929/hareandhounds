@@ -263,7 +263,7 @@ public class TodoService {
             if(state.get(0).getState().equals(STATE[0])) {
                 throw new IncorrectTurnException("TodoService.playGame: wait for second player");
             }
-            
+
             if(state.get(0).getState().equals(STATE[1])){
                 if(!play.getPlayerId().equals("HARE")){
                     throw new IncorrectTurnException("TodoService.playGame: Incorrect turn");
@@ -287,7 +287,6 @@ public class TodoService {
             int fromY = play.getFromY();
             int toX = play.getToX();
             int toY = play.getToY();
-
 
             if(play.getPlayerId().equals("HARE")){
                 if(!legalMove(fromX, fromY, toX, toY)){
@@ -361,7 +360,6 @@ public class TodoService {
                     .executeUpdate();
 
             //record the board position of hounds and hare
-
             List<Loc> houndPos = new ArrayList<>();
             int xNow = 0;
             int yNow = 0;
@@ -389,7 +387,6 @@ public class TodoService {
                 .addParameter("hare", harePos)
                 .executeUpdate();
 
-
             //update the state
             String sqlUpdateState;
             if(play.getPlayerId().equals("HOUND")) {
@@ -400,7 +397,6 @@ public class TodoService {
             conn.createQuery(sqlUpdateState)
                     .addParameter("gameId", play.getGameId())
                     .executeUpdate();
-
 
             //WIN_HARE_BY_ESCAPE
             int[] hound = new int[3];
@@ -419,25 +415,23 @@ public class TodoService {
             if(hare <= min){
                 String sqlWin = "UPDATE GameState SET state = 'WIN_HARE_BY_ESCAPE' WHERE gameId = :gameId";
                 conn.createQuery(sqlWin)
-                        .addParameter("gameId", play.getGameId())
+                        .addParameter("gameId", gameId)
                         .executeUpdate();
                 conn.createQuery(sqlDelete)
-                        .addParameter("gameId", play.getGameId())
+                        .addParameter("gameId", gameId)
                         .executeUpdate();
             }
 
             // WIN_HOUND
-
             List<Loc> nextMoves = validNextMove(xNow, yNow);
 
             if(!freeMove(nextMoves,houndPos)) {
-
                 String sqlWin = "UPDATE GameState SET state = 'WIN_HOUND' WHERE gameId = :gameId";
                 conn.createQuery(sqlWin)
-                        .addParameter("gameId", play.getGameId())
+                        .addParameter("gameId", gameId)
                         .executeUpdate();
                 conn.createQuery(sqlDelete)
-                        .addParameter("gameId", play.getGameId())
+                        .addParameter("gameId", gameId)
                         .executeUpdate();
             }
 
@@ -445,7 +439,7 @@ public class TodoService {
             String sqlFetchRecord = "SELECT * FROM GameRecord WHERE gameId = :gameId";
 
             List<Record> records = conn.createQuery(sqlFetchRecord)
-                                       .addParameter("gameId", play.getGameId())
+                                       .addParameter("gameId", gameId)
                                        .executeAndFetch(Record.class);
             Map<String,Integer> map = new HashMap<>();
             for(Record r : records){
@@ -456,20 +450,17 @@ public class TodoService {
                 }else{
                     map.put(key,1);
                 }
-
                 if(map.get(key) > 2){
                     String sqlWin = "UPDATE GameState SET state = 'WIN_HARE_BY_STALLING' WHERE gameId = :gameId";
                     conn.createQuery(sqlWin)
-                            .addParameter("gameId", play.getGameId())
+                            .addParameter("gameId", gameId)
                             .executeUpdate();
 
                     conn.createQuery(sqlDelete)
-                            .addParameter("gameId", play.getGameId())
+                            .addParameter("gameId", gameId)
                             .executeUpdate();
                 }
-
             }
-
             return playBoard.get(res).getPieceType();
         }catch(Sql2oException ex) {
             logger.error("TodoService.playGame: Failed to play", ex);
@@ -496,13 +487,10 @@ public class TodoService {
         public boolean small(Loc n){
             if(this.y < n.y){
                 return true;
-            }else if(this.y > n.y){
-                return false;
-            }else{
-                return this.x < n.x;
+            }else {
+                return this.y <= n.y && this.x < n.x;
             }
         }
-
     }
 
     // sort the hound loc by y then x
