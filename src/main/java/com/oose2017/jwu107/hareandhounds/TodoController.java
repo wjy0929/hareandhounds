@@ -73,7 +73,10 @@ public class TodoController {
         get(API_CONTEXT + "/:gameId/state", "application/json", (request, response) -> {
             try {
                 response.status(200);
-                return todoService.findState(request.params(":gameId"));
+                GameState state = todoService.findState(request.params(":gameId"));
+                HashMap<String,String> map = new HashMap<>();
+                map.put("state",state.getState());
+                return map;
             } catch (TodoService.InvalidGameIdException ex) {
                 logger.error("Cannot find the state of game " + request.params(":gameId"));
                 response.status(404);
@@ -102,7 +105,7 @@ public class TodoController {
         // play game
         post(API_CONTEXT + "/:gameId/turns", "application/json", (request, response) -> {
             try {
-                String playerId = todoService.playGame(request.body());
+                String playerId = todoService.playGame(request.body(),request.params(":gameId"));
                 HashMap<String,String> map = new HashMap<>();
                 map.put("playerId",playerId);
                 response.status(200);
@@ -132,9 +135,9 @@ public class TodoController {
                 response.status(400);
                 return new ErrorReason("FAILED_TO_PLAY");
             } catch (Exception ex){
-                logger.error("Failed to play");
+                logger.error("Failed");
                 response.status(444);
-                return new ErrorReason("FAILED_TO_PLAY");
+                return new ErrorReason("FAILED");
             }
         }, new JsonTransformer());
 

@@ -76,7 +76,7 @@ public class TodoService {
 
         try{
             String p = newGame.getPieceType();
-            if( !p.equals("HOUND") && !p.equals("HARE")){
+            if( p.equals("") || (!p.equals("HOUND") && !p.equals("HARE"))){
                 throw new PieceTypeException("TodoService.createNewGame: no this pieceType");
             }
 
@@ -87,11 +87,7 @@ public class TodoService {
         // set gameId using uuid and set playerId using piecetype
         String uuid = UUID.randomUUID().toString().replaceAll("-", "");
         newGame.setGameId(uuid);
-
-
-
         newGame.setPlayerId(newGame.getPieceType());
-
 
         String sql = "INSERT INTO GameTable (gameId, playerId, pieceType) VALUES (:gameId, :playerId, :pieceType)" ;
 
@@ -113,8 +109,6 @@ public class TodoService {
                 .addParameter("gameId", newGame.getGameId())
                 .addParameter("state", "WAITING_FOR_SECOND_PLAYER")
                 .executeUpdate();
-
-
 
             //init game board
             List<GameBoard> board = new ArrayList<>();
@@ -216,7 +210,6 @@ public class TodoService {
     public List<GameBoard> findBoard(String gameId) throws InvalidGameIdException, TodoServiceException {
         String sql = "SELECT * FROM GameBoard WHERE gameId = :gameId";
 
-
         try (Connection conn = db.open()) {
             List<GameBoard> board = conn.createQuery(sql)
                                         .addParameter("gameId", gameId)
@@ -238,31 +231,42 @@ public class TodoService {
      * Play a game
      */
 
-    public String playGame(String body) throws InvalidGameIdException, InvalidPlayerIdException,
+    public String playGame(String body,String gameId) throws InvalidGameIdException, InvalidPlayerIdException,
                                                   IllegalMoveException, IncorrectTurnException, TodoServiceException {
+
         Play play = new Gson().fromJson(body, Play.class);
+        System.out.println(play.toString());
+
         String sqlBoard = "SELECT * FROM GameBoard WHERE gameId = :gameId";
         String sqlState = "SELECT * FROM GameState WHERE gameId = :gameId";
         String sqlRecord = "INSERT INTO GameRecord (gameId, hound, hare) VALUES (:gameId, :hound, :hare)";
         String sqlDelete = "DELETE FROM GameRecord WHERE gameId = :gameId";
 
         try(Connection conn = db.open()){
+
             List<GameBoard> playBoard = conn.createQuery(sqlBoard)
-                                            .addParameter("gameId", play.getGameId())
+                                            .addParameter("gameId", gameId)
                                             .executeAndFetch(GameBoard.class);
+
             List<GameState> state = conn.createQuery(sqlState)
-                                        .addParameter("gameId", play.getGameId())
+                                        .addParameter("gameId", gameId)
                                         .executeAndFetch(GameState.class);
 
             // Invalid game id
-            if(playBoard == null){
+            if(playBoard.size() == 0){
                 throw new InvalidGameIdException("TodoService.playGame: Invalid game id");
             }
 
             // Invalid player id
-            if(!playBoard.get(0).getPieceType().equals("HOUND") && !playBoard.get(0).getPieceType().equals("HARE")){
+            if(playBoard.get(0).getPieceType().equals("") || (!playBoard.get(0).getPieceType().equals("HOUND") && !playBoard.get(0).getPieceType().equals("HARE"))){
                 throw new InvalidPlayerIdException("TodoService.playGame: Invalid player id");
             }
+
+            System.out.println("aaa");
+
+            play.setGameId(gameId);
+
+            System.out.println("aaa");
 
             // Incorrect turn
             if(state.get(0).getState().equals(STATE[1])){
