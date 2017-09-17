@@ -535,7 +535,6 @@ public class TodoService {
         }
 
         return res;
-
     }
 
     // form valid next move
@@ -584,7 +583,6 @@ public class TodoService {
                     }
                 }
             }
-
         }
 
         for(int i=0; i < n1; i++){
@@ -608,7 +606,7 @@ public class TodoService {
         return true;
     }
 
-    // the to position cannot in the current occupied position
+    // to position cannot in the current occupied position
     public boolean samePosition(List<GameBoard> playBoard, int toX, int toY){
         for(GameBoard g : playBoard){
             if(g.getX() == toX && g.getY() == toY){
@@ -624,7 +622,6 @@ public class TodoService {
         if(special.contains(cur)){
             return true;
         }
-
         return false;
     }
 
@@ -634,35 +631,29 @@ public class TodoService {
             super(message, cause);
         }
     }
-
     public static class PieceTypeException extends Exception {
         public PieceTypeException(String message) {super(message);}
     }
-
     public static class InvalidGameIdException extends Exception {
         public InvalidGameIdException(String message) {
             super(message);
         }
     }
-
     public static class InvalidPlayerIdException extends Exception {
         public InvalidPlayerIdException(String message) {
             super(message);
         }
     }
-
     public static class PlayerFullException extends Exception {
         public PlayerFullException(String message) {
             super(message);
         }
     }
-
     public static class IncorrectTurnException extends Exception {
         public IncorrectTurnException(String message) {
             super(message);
         }
     }
-
     public static class IllegalMoveException extends Exception {
         public IllegalMoveException(String message) {
             super(message);

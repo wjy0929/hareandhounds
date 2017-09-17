@@ -127,7 +127,7 @@ public class TodoController {
             } catch (TodoService.IncorrectTurnException ex) {
                 logger.error("Incorrect Turn");
                 response.status(422);
-                return new ErrorReason("INCORRECT_TURN");
+                return new String("INCORRECT_TURN");
             } catch (TodoService.TodoServiceException ex) {
                 logger.error("Failed to play");
                 response.status(400);
