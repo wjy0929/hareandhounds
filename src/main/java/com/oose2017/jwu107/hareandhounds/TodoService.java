@@ -319,6 +319,21 @@ public class TodoService {
                 throw new IllegalMoveException("TodoService.playGame: cannot move in this direction");
             }
 
+            Loc ori = new Loc(fromX,fromY);
+            int flag = 0;
+            for(GameBoard g : playBoard){
+                Loc cur = new Loc(g.getX(),g.getY());
+                if(ori.equal(cur)){
+                    break;
+                }else{
+                    flag++;
+                }
+            }
+
+            if(flag == playBoard.size()){
+                throw new IllegalMoveException("TodoService.playGame: cannot start from empty cell ");
+            }
+
 
             // update x and y
             int res = 0;
