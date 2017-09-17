@@ -76,7 +76,7 @@ public class TodoController {
                 GameState state = todoService.findState(request.params(":gameId"));
                 HashMap<String,String> map = new HashMap<>();
                 map.put("state",state.getState());
-                return map;
+                return state;
             } catch (TodoService.InvalidGameIdException ex) {
                 logger.error("Cannot find the state of game " + request.params(":gameId"));
                 response.status(404);
