@@ -34,11 +34,15 @@ public class TodoController {
 
                 response.status(201);
                 return newGame;
+            } catch (TodoService.PieceTypeException ex) {
+                logger.error("No this pieceType");
+                response.status(400);
+                return Collections.EMPTY_MAP;
             } catch (TodoService.TodoServiceException ex) {
                 logger.error("Failed to create new game");
-                response.status(500);
+                response.status(400);
+                return Collections.EMPTY_MAP;
             }
-            return Collections.EMPTY_MAP;
         }, new JsonTransformer());
 
 
@@ -46,27 +50,21 @@ public class TodoController {
         put(API_CONTEXT + "/:gameId", "application/json", (request, response) -> {
             try {
                 logger.info("Second Player join the game " + request.params(":gameId"));
-
                 Game newPlayer = todoService.joinGame(request.params(":gameId"));
-
                 response.status(200);
-
                 return newPlayer;
-
             } catch (TodoService.InvalidGameIdException ex) {
                 logger.error(String.format("Invalid game id ", request.params(":gameId")));
                 response.status(404);
-                return Collections.EMPTY_MAP;
             }catch (TodoService.PlayerFullException ex) {
                 logger.error(String.format("Second player already join the game ", request.params(":gameId")));
                 response.status(410);
-                return Collections.EMPTY_MAP;
             }
             catch (TodoService.TodoServiceException ex) {
                 logger.error(String.format("Failed to join the game: %s", request.params(":gameId")));
-                response.status(500);
-                return Collections.EMPTY_MAP;
+                response.status(400);
             }
+            return Collections.EMPTY_MAP;
         }, new JsonTransformer());
 
         // get game state
@@ -74,11 +72,14 @@ public class TodoController {
             try {
                 response.status(200);
                 return todoService.findState(request.params(":gameId"));
-            } catch (TodoService.TodoServiceException ex) {
+            } catch (TodoService.InvalidGameIdException ex) {
                 logger.error("Cannot find the state of game " + request.params(":gameId"));
                 response.status(404);
-                return Collections.EMPTY_MAP;
+            } catch (TodoService.TodoServiceException ex) {
+                logger.error("Failed to get game state");
+                response.status(400);
             }
+            return Collections.EMPTY_MAP;
         }, new JsonTransformer());
 
         // get game board
@@ -86,17 +87,20 @@ public class TodoController {
             try {
                 response.status(200);
                 return todoService.findBoard(request.params(":gameId")) ;
-            } catch  (TodoService.TodoServiceException ex) {
+            } catch  (TodoService.InvalidGameIdException ex) {
                 logger.error("Cannot find the board of game " + request.params(":gameId"));
                 response.status(404);
-                return Collections.EMPTY_MAP;
+            } catch (TodoService.TodoServiceException ex) {
+                logger.error("Failed to get the board");
+                response.status(400);
             }
+            return Collections.EMPTY_MAP;
         }, new JsonTransformer());
 
         // play game
         post(API_CONTEXT + "/:gameId/turns", "application/json", (request, response) -> {
             try {
-                response.status(201);
+                response.status(200);
                 return todoService.playGame(request.body());
 
             } catch (TodoService.InvalidGameIdException ex) {
@@ -121,7 +125,7 @@ public class TodoController {
             }
             catch (TodoService.TodoServiceException ex) {
                 logger.error("Failed to play");
-                response.status(500);
+                response.status(400);
                 return new ErrorReason("FAILED_TO_PLAY");
             }
         }, new JsonTransformer());

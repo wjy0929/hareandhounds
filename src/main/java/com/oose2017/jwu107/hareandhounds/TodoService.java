@@ -46,13 +46,15 @@ public class TodoService {
         //program to mostly self-contained. But this is not always what you want;
         //sometimes you want to create the schema externally via a script.
         try (Connection conn = db.open()) {
-            String sqlCreateGame = "CREATE TABLE IF NOT EXISTS GameTable (gameId TEXT, playerId TEXT, pieceType TEXT)";
+            String sqlCreateGame = "CREATE TABLE IF NOT EXISTS GameTable (gameId TEXT NOT NULL, playerId TEXT NOT NULL, " +
+                    "pieceType TEXT NOT NULL)";
 
-            String sqlCreateState = "CREATE TABLE IF NOT EXISTS GameState (gameId TEXT PRIMARY KEY, state TEXT)";
+            String sqlCreateState = "CREATE TABLE IF NOT EXISTS GameState (gameId TEXT PRIMARY KEY NOT NULL, state TEXT NOT NULL)";
 
-            String sqlCreateBoard = "CREATE TABLE IF NOT EXISTS GameBoard (gameId TEXT, pieceType TEXT, x INTEGER, y INTEGER)";
+            String sqlCreateBoard = "CREATE TABLE IF NOT EXISTS GameBoard (gameId TEXT NOT NULL, pieceType TEXT NOT NULL, " +
+                    "x INTEGER, y INTEGER)";
 
-            String sqlCreateRecord = "CREATE TABLE IF NOT EXISTS GameRecord (gameId TEXT, hound TEXT, hare TEXT)";
+            String sqlCreateRecord = "CREATE TABLE IF NOT EXISTS GameRecord (gameId TEXT NOT NULL, hound TEXT, hare TEXT)";
 
             conn.createQuery(sqlCreateGame).executeUpdate();
             conn.createQuery(sqlCreateState).executeUpdate();
@@ -69,12 +71,25 @@ public class TodoService {
     /**
      * Create a new Game and return all info.
      */
-    public Game createNewGame(String body) throws TodoServiceException {
+    public Game createNewGame(String body) throws PieceTypeException,TodoServiceException {
         Game newGame = new Gson().fromJson(body, Game.class);
+
+        try{
+            String p = newGame.getPieceType();
+            if( !p.equals("HOUND") && !p.equals("HARE")){
+                throw new PieceTypeException("TodoService.createNewGame: no this pieceType");
+            }
+
+        }catch(Exception ex){
+            throw new TodoServiceException("TodoService.createNewGame: Failed to create new game", ex);
+        }
 
         // set gameId using uuid and set playerId using piecetype
         String uuid = UUID.randomUUID().toString().replaceAll("-", "");
         newGame.setGameId(uuid);
+
+
+
         newGame.setPlayerId(newGame.getPieceType());
 
 
@@ -86,6 +101,8 @@ public class TodoService {
 
         try (Connection conn = db.open()) {
 
+
+
             // create the new game and init the first player
             conn.createQuery(sql)
                     .bind(newGame)
@@ -96,6 +113,7 @@ public class TodoService {
                 .addParameter("gameId", newGame.getGameId())
                 .addParameter("state", "WAITING_FOR_SECOND_PLAYER")
                 .executeUpdate();
+
 
 
             //init game board
@@ -181,6 +199,10 @@ public class TodoService {
             List<GameState> stateinfo = conn.createQuery(sql)
                                             .bind(state)
                                             .executeAndFetch(GameState.class);
+
+            if(stateinfo.size() == 0){
+                throw new InvalidGameIdException(("TodoService.findState : invalid game id"));
+            }
             return stateinfo.get(0);
         } catch(Sql2oException ex) {
             logger.error("TodoService.findState: Cannot find the state of game", ex);
@@ -194,15 +216,17 @@ public class TodoService {
     public List<GameBoard> findBoard(String gameId) throws InvalidGameIdException, TodoServiceException {
         String sql = "SELECT * FROM GameBoard WHERE gameId = :gameId";
 
-        GameBoard board = new GameBoard(null,null,0,0);
-        board.setGameId(gameId);
 
         try (Connection conn = db.open()) {
-            return conn.createQuery(sql)
-                    .bind(board)
-                    .executeAndFetch(GameBoard.class);
+            List<GameBoard> board = conn.createQuery(sql)
+                                        .addParameter("gameId", gameId)
+                                        .executeAndFetch(GameBoard.class);
 
+            if(board.size() < 4){
+                throw new InvalidGameIdException(("TodoService.findBoard: invalid game id"));
+            }
 
+            return board;
         } catch(Sql2oException ex) {
             logger.error("TodoService.findBoard: Cannot find the board of game", ex);
             throw new TodoServiceException("TodoService.findBoard: Cannot find the board of game", ex);
@@ -268,10 +292,10 @@ public class TodoService {
             }else{
                 if(legalMove(fromX, fromY, toX, toY)){
                     if(fromX > toX){
-                        throw new IncorrectTurnException("TodoService.playGame: Hounds cannot move backwards");
+                        throw new IllegalMoveException("TodoService.playGame: Hounds cannot move backwards");
                     }
                 }else{
-                    throw new IncorrectTurnException("TodoService.playGame: hound's position is out of board");
+                    throw new IllegalMoveException("TodoService.playGame: hound's position is out of board");
                 }
             }
 
@@ -287,7 +311,7 @@ public class TodoService {
 
 
             if(diagMove(special, fromX, fromY) && diagMove(special, toX, toY)){
-                throw new IncorrectTurnException("TodoService.playGame: cannot move in this direction");
+                throw new IllegalMoveException("TodoService.playGame: cannot move in this direction");
             }
 
 
@@ -602,6 +626,10 @@ public class TodoService {
         public TodoServiceException(String message, Throwable cause) {
             super(message, cause);
         }
+    }
+
+    public static class PieceTypeException extends Exception {
+        public PieceTypeException(String message) {super(message);}
     }
 
     public static class InvalidGameIdException extends Exception {
