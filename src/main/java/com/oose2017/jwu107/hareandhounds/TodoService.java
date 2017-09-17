@@ -235,7 +235,7 @@ public class TodoService {
                                                   IllegalMoveException, IncorrectTurnException, TodoServiceException {
 
         Play play = new Gson().fromJson(body, Play.class);
-        System.out.println(play.toString());
+        //System.out.println(play.toString());
 
         String sqlBoard = "SELECT * FROM GameBoard WHERE gameId = :gameId";
         String sqlState = "SELECT * FROM GameState WHERE gameId = :gameId";
@@ -265,11 +265,8 @@ public class TodoService {
                 throw new InvalidPlayerIdException("TodoService.playGame: Invalid player id");
             }
 
-            System.out.println("aaa");
-
             play.setGameId(gameId);
 
-            System.out.println("aaa");
 
             // Incorrect turn
             if(state.get(0).getState().equals(STATE[1])){
@@ -424,7 +421,7 @@ public class TodoService {
             }
             int min = Math.min(Math.min(hound[0],hound[1]),hound[2]);
 
-            if(hare < min){
+            if(hare <= min){
                 String sqlWin = "UPDATE GameState SET state = 'WIN_HARE_BY_ESCAPE' WHERE gameId = :gameId";
                 conn.createQuery(sqlWin)
                         .addParameter("gameId", play.getGameId())
