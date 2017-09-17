@@ -259,6 +259,11 @@ public class TodoService {
                 throw new InvalidGameIdException("TodoService.playGame: Invalid game id");
             }
 
+            // Invalid player id
+            if(!playBoard.get(0).getPieceType().equals("HOUND") && !playBoard.get(0).getPieceType().equals("HARE")){
+                throw new InvalidPlayerIdException("TodoService.playGame: Invalid player id");
+            }
+
             // Incorrect turn
             if(state.get(0).getState().equals(STATE[1])){
                 if(!play.getPlayerId().equals("HARE")){
