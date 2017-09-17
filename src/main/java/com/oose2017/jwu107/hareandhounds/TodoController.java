@@ -9,6 +9,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Scanner;
 
 import static spark.Spark.*;
 
@@ -100,8 +102,11 @@ public class TodoController {
         // play game
         post(API_CONTEXT + "/:gameId/turns", "application/json", (request, response) -> {
             try {
+                String playerId = todoService.playGame(request.body());
+                HashMap<String,String> map = new HashMap<>();
+                map.put("playerId",playerId);
                 response.status(200);
-                return todoService.playGame(request.body());
+                return map;
 
             } catch (TodoService.InvalidGameIdException ex) {
                 logger.error("Invalid game id");
@@ -122,10 +127,13 @@ public class TodoController {
                 logger.error("Incorrect Turn");
                 response.status(422);
                 return new ErrorReason("INCORRECT_TURN");
-            }
-            catch (TodoService.TodoServiceException ex) {
+            } catch (TodoService.TodoServiceException ex) {
                 logger.error("Failed to play");
                 response.status(400);
+                return new ErrorReason("FAILED_TO_PLAY");
+            } catch (Exception ex){
+                logger.error("Failed to play");
+                response.status(444);
                 return new ErrorReason("FAILED_TO_PLAY");
             }
         }, new JsonTransformer());

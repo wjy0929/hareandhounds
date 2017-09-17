@@ -238,7 +238,7 @@ public class TodoService {
      * Play a game
      */
 
-    public GameBoard playGame(String body) throws InvalidGameIdException, InvalidPlayerIdException,
+    public String playGame(String body) throws InvalidGameIdException, InvalidPlayerIdException,
                                                   IllegalMoveException, IncorrectTurnException, TodoServiceException {
         Play play = new Gson().fromJson(body, Play.class);
         String sqlBoard = "SELECT * FROM GameBoard WHERE gameId = :gameId";
@@ -451,7 +451,7 @@ public class TodoService {
 
             }
 
-            return playBoard.get(res);
+            return playBoard.get(res).getPieceType();
         }catch(Sql2oException ex) {
             logger.error("TodoService.playGame: Failed to play", ex);
             throw new TodoServiceException("TodoService.playGame: Failed to play", ex);
