@@ -74,8 +74,6 @@ public class TodoController {
             try {
                 response.status(200);
                 GameState state = todoService.findState(request.params(":gameId"));
-                HashMap<String,String> map = new HashMap<>();
-                map.put("state",state.getState());
                 return state;
             } catch (TodoService.InvalidGameIdException ex) {
                 logger.error("Cannot find the state of game " + request.params(":gameId"));
@@ -134,10 +132,6 @@ public class TodoController {
                 logger.error("Failed to play");
                 response.status(400);
                 return new ErrorReason("FAILED_TO_PLAY");
-            } catch (Exception ex){
-                logger.error("Failed");
-                response.status(444);
-                return new ErrorReason("FAILED");
             }
         }, new JsonTransformer());
 

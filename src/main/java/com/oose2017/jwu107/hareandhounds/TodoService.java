@@ -31,11 +31,8 @@ public class TodoService {
     private final String[] STATE = {"WAITING_FOR_SECOND_PLAYER", "TURN_HARE", "TURN_HOUND",
                                     "WIN_HARE_BY_ESCAPE", "WIN_HARE_BY_STALLING", "WIN_HOUND"};
 
-
-
-
     /**
-     * Construct the model with a pre-defined datasource. The current implementation
+     * Construct the model with a pre-defined data source. The current implementation
      * also ensures that the DB schema is created if necessary.
      *
      */
@@ -74,9 +71,10 @@ public class TodoService {
     public Game createNewGame(String body) throws PieceTypeException,TodoServiceException {
         Game newGame = new Gson().fromJson(body, Game.class);
 
+        // judge whether the piecetype is valid or not
         try{
             String p = newGame.getPieceType();
-            if( p.equals("") || (!p.equals("HOUND") && !p.equals("HARE"))){
+            if( p == null || (!p.equals("HOUND") && !p.equals("HARE"))){
                 throw new PieceTypeException("TodoService.createNewGame: no this pieceType");
             }
 
@@ -96,9 +94,6 @@ public class TodoService {
         String sqlInsertBoard = "INSERT INTO GameBoard (gameId, pieceType, x, y) VALUES (:gameId, :pieceType, :x, :y)";
 
         try (Connection conn = db.open()) {
-
-
-
             // create the new game and init the first player
             conn.createQuery(sql)
                     .bind(newGame)
